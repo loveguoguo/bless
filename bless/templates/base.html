@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<!-- <html xmlns="http://www.w3.org/1999/xhtml">-->
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<meta name="description" content="节日短信,生日祝福,婚礼祝福,开业祝贺" />
+	<meta name="keywords" content="节日,生日,祝福" />
+	<title>{% block title %}祝福词{% endblock %}</title>
+	<link rel="stylesheet" href="/static/bootstrap/css/bootstrap.min.css">
+    <link rel='stylesheet' href='/static/css/article.css'>
+    <style>
+        body{
+            padding-top:60px;
+            }
+        .container{
+            margin:0 auto;
+            max-width:980px;
+        }
+        @media (max-width:480px) 
+        </style>
+	<script src="/static/js/jquery-1.7.1.min.js"></script>
+    <script src='/static/bootstrap/js/bootstrap.min.js'></script>
+	{% block js %}
+	{% endblock %}
+	<script type='text/javascript'>
+	$(document).ready(function(){
+        $('.dropdown-toggle').dropdown();
+		{% block on_ready %}
+		{% endblock %}
+	});
+    {% block jscode %}
+    {% endblock %}
+	</script>
+</head>
+<body>
+<div class='container'>
+	<div class='masthead'>
+        <h3 class='muted'>祝福汇</h3>
+        <div class='navbar'>
+            <div class='navbar-inner'>
+                <div class='container'>
+                    <ul class='nav'>
+                        <li {% ifequal page 'home' %}class='active'{% endifequal %}>
+                            <a href='{% url zhufu_home %}'>最新</a>
+                        </li>
+                        <li {% ifequal page 'festival' %}class='active'{% endifequal %}>
+                            <a href='{% url festival_articles %}'>节日</a>
+                        <li>
+                        <li {% ifequal page 'birthday' %}class='active'{% endifequal %}>
+                            <a href='{% url birthday_articles %}'>生日</a>
+                        </li>
+                        <li {% ifequal page 'others' %}class='active'{% endifequal %}>
+                            <a href='{% url others_articles %}'>其他</a>
+                        </li>
+                    </ul>
+                    <form class='navbar-search form-search' action='/search/'>
+                        <div class='input-append'>
+                            <input type='text' name='words' {% if words %}value='{{words}}' {% endif %} class='search-query span2' placeholder='输入你的条件'>
+                            <button type='submit' class='btn'>搜索</button>
+                        </div>
+                    </form>
+                </div>
+        </div>
+    </div>  
+    <div class="container">
+            {% block content %}   
+            <div class='row'>
+                <div class='span7'>
+			        {% block leftcontent %}
+                    
+                    {% endblock %}
+                </div>
+                <div class='span3'>
+                    {% block rightcontent %}
+                        right content
+                    {% endblock %}
+                </div>
+            </div>
+			{% endblock %}
+	</div>
+</div>
+</body>
+</html>

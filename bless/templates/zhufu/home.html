@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% load paginator_tags %}
+{% load dictkey_tags %}
+{% block title %}祝福汇-提供丰富的节日生日等祝福素材{% endblock %}
+{% block leftcontent %}
+    {% if tag %}
+        <div>当前选择:<span class='badge'>{{tag.name}}</span></div>
+    {% endif %}
+    {% for article in articles %}
+        <div class='box'>
+            {% with atags=article_tags|key:article.id %}
+            <div class='tag'>
+                {% for atag in atags %}
+                <span class='badge'>{{atag.name}}</span>     
+                {% endfor %}
+            </div>
+            {% endwith %}
+            <p>{{article.content}}</p>
+            {% if article.imgurl %}
+            <div class='imgbox'><img src='{{article.imgurl.url}}'></img></div>
+            {% endif %}
+        </div>
+    {% endfor %}
+    <div class='pagination pagination-centered'>
+        {% simple_paginator articles '' %}
+    </div>
+{% endblock %}
+{% block rightcontent %}
+    <div class='tagbox'>
+        <div class='clearfix tags'>
+        {% for tag in tags %}
+            <a href='/tag/{{tag.id}}/'>{{tag.name}}</a>
+        {% endfor %}
+        </div> 
+    </div>
+{% endblock %}

@@ -1,0 +1,6 @@
+include bless/*.txt
+include bless/*.sh
+include bless/*.ico
+recursive-include bless/templates *
+recursive-include bless/static *
+

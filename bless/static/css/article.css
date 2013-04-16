@@ -1,0 +1,39 @@
+div .box{
+    background-color:#eee;
+    clear:both;
+    min-height: 60px;
+    margin-top:10px;
+    padding:18px 20px;
+    margin-bottom:20px;
+    box-shadow: 0 4px 0 #e1e1e1;
+}
+.box .tag{
+    font-size:14px;
+    vertical-align: middle;
+    line-height:100%;
+    margin: 0 0 17px;
+}
+
+.box .imgbox{
+    margin:10px 0;
+}
+
+.tagbox{
+    background-color:#eee;
+    width: 90%;
+    padding:10px 10px;
+    margin-bottom:10px;
+    border: 2px solid #e1e1e1;
+    box-shadow: 0 4px 0 #e1e1e1;
+}
+
+.tagbox .tags{
+    margin-left:0;
+    list-style:none;
+}
+.tags a{
+    display:inline-block;
+    margin: 0 4px 0 0;
+    line-height:25px;
+}
+
