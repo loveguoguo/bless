@@ -64,7 +64,7 @@ def responseMsg(request):
     if not queryStr:
         replyContent = DEFAULTREPLY
     else:
-        questions = SEARCH.search_by_page(queryStr, 1)
+        questions = SEARCH.search_by_page(queryStr, 1, 1)
         qids = [i['id'] for i in questions['object_list']]
         article_list = Article.objects.filter(questions__id__in=qids).distinct()
         if not article_list:
