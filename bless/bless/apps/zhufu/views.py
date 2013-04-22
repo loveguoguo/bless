@@ -139,7 +139,6 @@ def search(request):
     qids = [i['id'] for i in questions['object_list']]
     article_list = Article.objects.filter(questions__id__in=qids).distinct()
     articles = common_paginator(request, article_list)
-    articles = sorted(articles, key=lambda x:qids.index(x))
     article_tags, tag = get_article_tags(articles) 
     tags = Tag.objects.all()
     data = {

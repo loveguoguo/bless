@@ -41,16 +41,16 @@
                 <div class='container'>
                     <ul class='nav'>
                         <li {% ifequal page 'home' %}class='active'{% endifequal %}>
-                            <a href='{% url zhufu_home %}'>最新</a>
+                            <a href='{% url "zhufu_home" %}'>最新</a>
                         </li>
                         <li {% ifequal page 'festival' %}class='active'{% endifequal %}>
-                            <a href='{% url festival_articles %}'>节日</a>
+                            <a href='{% url "festival_articles" %}'>节日</a>
                         <li>
                         <li {% ifequal page 'birthday' %}class='active'{% endifequal %}>
-                            <a href='{% url birthday_articles %}'>生日</a>
+                            <a href='{% url "birthday_articles" %}'>生日</a>
                         </li>
                         <li {% ifequal page 'others' %}class='active'{% endifequal %}>
-                            <a href='{% url others_articles %}'>其他</a>
+                            <a href='{% url "others_articles" %}'>其他</a>
                         </li>
                     </ul>
                     <form class='navbar-search form-search' action='/search/'>
