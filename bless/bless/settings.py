@@ -16,8 +16,8 @@ DATABASES = {
 	'OPTIONS': {
 		'init_command': 'SET storage_engine = INNODB',
 	},
-        'NAME': 'bless',                      # Or path to database file if using sqlite3.
-        'USER': 'bless',                      # Not used with sqlite3.
+        'NAME': 'bless_test',                      # Or path to database file if using sqlite3.
+        'USER': 'bless_test',                      # Not used with sqlite3.
         'PASSWORD': '123456',                  # Not used with sqlite3.
         'HOST': '',                      # Set to empty string for localhost. Not used with sqlite3.
         'PORT': '',                      # Set to empty string for default. Not used with sqlite3.
@@ -99,6 +99,7 @@ TEMPLATE_LOADERS = (
 MIDDLEWARE_CLASSES = (
     'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'djweixin.middleware.WeixinSessionMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
@@ -126,6 +127,7 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.admin',
+    'djweixin',
     'taggit',
     'bless.apps.zhufu',
     # Uncomment the next line to enable the admin:
@@ -179,3 +181,7 @@ LOGGING = {
 }
 
 INDEX_ROOT = os.path.join(os.path.dirname(__file__), '../indexdb')
+
+WEIXIN_TOKEN = 'eae00dc04fb4f961a005a64a51c4043d'
+WEIXIN_URL = '/weixin/'
+WEIXIN_SESSION_ENGINE = 'djweixin.backends.db'
