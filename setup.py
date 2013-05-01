@@ -6,7 +6,7 @@ from setuptools import setup, find_packages
 setup(  name='bless',
         author = 'loveguoguo',
         packages = find_packages(),
-        install_requires = ['django>=1.4.2', 'mmseg', ],
+        install_requires = ['django>=1.4.2', 'mmseg', 'taggit'],
         dependency_links = [
             'https://pypi.python.org/pypi/mmseg/1_3_0',
         ],
