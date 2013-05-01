@@ -15,10 +15,19 @@ data = '''<xml>
  <MsgId>1234567890123456</MsgId>
  </xml>'''
 
-def test():
+data2 = '''<xml>
+ <ToUserName><![CDATA[toUser]]></ToUserName>
+ <FromUserName><![CDATA[fromUser]]></FromUserName> 
+ <CreateTime>1348831860</CreateTime>
+ <MsgType><![CDATA[text]]></MsgType>
+ <Content><![CDATA[m]]></Content>
+ <MsgId>1234567890123456</MsgId>
+ </xml>'''
+
+def test(d):
     #pdata = urllib.urlencode(data)
     conn = httplib.HTTPConnection(HOST, PORT, False)
-    conn.request('POST', '/weixin/', data, headers={'Content-Type': 'application/xml'})
+    conn.request('POST', '/weixin/', d, headers={'Content-Type': 'application/xml'})
     res = conn.getresponse()
     if res.status!= 200:
         f = open('test.html', 'w')
@@ -36,4 +45,5 @@ def test():
 
 
 if __name__ == '__main__':
-    test()
+    test(data)
+    test(data2)
