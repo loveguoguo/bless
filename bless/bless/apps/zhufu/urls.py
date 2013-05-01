@@ -14,6 +14,6 @@ urlpatterns = patterns('bless.apps.zhufu.views',
 )
 
 urlpatterns += patterns('bless.apps.zhufu.weixin',
-    url(r'^weixin/$', 'method_splitter', {'GET': weixin.checkSignature,
+    url(r'^weixin/?$', 'method_splitter', {'GET': weixin.checkSignature,
                                         'POST': weixin.responseMsg}),
 )
