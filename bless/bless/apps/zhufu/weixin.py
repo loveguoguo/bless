@@ -3,12 +3,14 @@
 
 from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.core.urlresolvers import reverse
+from django.core.paginator import Paginator, EmptyPage
 from django.shortcuts import render_to_response, get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.encoding import smart_str, smart_unicode
 from django.conf import settings
 from models import *
 from taggit.models import Tag, TaggedItem
+from djweixin.utils import checkSignature, HandlerBase, WeiXin
 import simplejson
 from indexes import Search
 import xml.etree.ElementTree as ET
@@ -16,8 +18,6 @@ import hashlib
 import time
 
 SEARCH = Search(settings.INDEX_ROOT)
-TOKEN = 'token'
-DEFAULTREPLY = '不知道哦,你換個方式問問?'
 
 @csrf_exempt
 def method_splitter(request, *args, **kwargs):
@@ -29,52 +29,74 @@ def method_splitter(request, *args, **kwargs):
         return post_view(request, *args, **kwargs)
     raise Http404
 
-def checkSignature(request):
-    signature = request.GET.get('signature')
-    timestamp = request.GET.get('timestamp')
-    nonce = request.GET.get('nonce')
-    echoStr = request.GET.get('echostr')
-    
-    tmplist = [TOKEN, timestamp, nonce]
-    tmplist.sort()
-    tmpstr = '%s%s%s'%tuple(tmplist)
-    tmpstr = hashlib.sha1(tmpstr).hexdigest()
-    if tmpstr == signature:
-        return HttpResponse(echoStr)
-    else:
-        raise Http404
+class TextHandler(HandlerBase):
+    DefaultReply = '没找到符合要求的祝福，请换个条件'
 
-def parseMsgXml(rootElem):
-    msg = {}
-    if rootElem.tag == 'xml':
-        for child in rootElem:
-            msg[child.tag] = smart_str(child.text)
-    return msg
+    def more(self, request):
+        '''获取上一次查询的更多内容'''
+        last_qid = request.weixinsession.get('last_qid')
+        last_page = request.weixinsession.get('last_page', 0)
+        if not last_qid:
+            return self.DefaultReply
+        article_list = Article.objects.filter(questions__id=last_qid)
+        paginator = Paginator(article_list, 3)
+        try:
+            articles = paginator.page(last_page + 1)
+        except EmptyPage:
+            if last_page:
+                return '没有更多内容啦，欢迎查询其他祝福语'
+            else:
+                return '不好意思，没有查到相关的祝福语，欢迎查询其他祝福语'
+        return articles
 
-def genReplyXml(msg, replyContent):
-    extTpl = '<xml><ToUserName><![CDATA[%s]]></ToUserName><FromUserName><![CDATA[%s]]></FromUserName><CreateTime>%s</CreateTime><MsgType><![CDATA[%s]]></MsgType><Content><![CDATA[%s]]></Content><FuncFlag>0</FuncFlag></xml>';
-    extTpl = extTpl % (msg['FromUserName'], msg['ToUserName'], str(int(time.time())),
-                        'text', replyContent)
-    return extTpl
+    def __call__(self, request):
+        queryStr = self.msg.get('Content')
+        if not queryStr:
+            replyContent = self.DefaultReply
+        else:
+            if queryStr.lower() != 'm':
+                questions = SEARCH.search_by_page(queryStr, 1, 1)
+                qids = [i['id'] for i in questions['object_list']]
+                request.weixinsession['last_qid'] = qids and qids[0] or None
+                request.weixinsession['last_page'] = 0
+            articles = self.more(request)    
+            if isinstance(articles, str):
+                return {'type':'text', 'info': articles}
+            else:
+                _type = 'text'
+                #for article in articles:
+                #    if article.imgurl:
+                #        _type = 'news'
+                #        break
+                content = '\n'.join([a['content'] for a in articles])
+                while len(content) >= 2000:
+                    content = content[:content.rfind('\n')]
+                content = '%s\n输入m可以查看更多'%content
+                return {'type':'text', 'info':content}
+                
+
+class EventHandler(HandlerBase):
+    welcome = '感谢关注节日生日祝福语,你可以输入想要条件查询祝福语'
+    def __call__(self, request):
+        event = request.weixindata.get('Event')
+        if event.lower() == 'subscribe':
+            return {'type':'text', 'info': self.welcome}
+
+class ImageHandler(HandlerBase):
+    pass
+
+class LocationHandler(HandlerBase):
+    pass
+
+class LinkHandler(HandlerBase):
+    pass
+
+WeiXin.register_handler('text', TextHandler)
+WeiXin.register_handler('event', EventHandler)
+
 
 def responseMsg(request):
-    rawStr = smart_str(request.raw_post_data)
-    msg = parseMsgXml(ET.fromstring(rawStr))
-    queryStr = msg.get('Content')
-    if not queryStr:
-        replyContent = DEFAULTREPLY
-    else:
-        questions = SEARCH.search_by_page(queryStr, 1, 1)
-        qids = [i['id'] for i in questions['object_list']]
-        article_list = Article.objects.filter(questions__id__in=qids).distinct()
-        if not article_list:
-            replyContent = DEFAULTREPLY
-        else:
-            article = article_list[0]
-            if article.imgurl:
-                replyContent = '%s\n%s'%(article.content, article.imgurl)
-            else:
-                replyContent = article.content
-    data = genReplyXml(msg, replyContent)
+    weixin = WeiXin(request)
+    data = weixin.genReply(request)
     return HttpResponse(data)
 
