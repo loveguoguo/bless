@@ -26,6 +26,7 @@ def method_splitter(request, *args, **kwargs):
 
 class TextHandler(HandlerBase):
     DefaultReply = '没找到符合要求的祝福，请换个条件'
+    NumPerPage = 3
 
     def more(self, request):
         '''获取上一次查询的更多内容'''
@@ -34,7 +35,7 @@ class TextHandler(HandlerBase):
         if not last_qid:
             return self.DefaultReply
         article_list = Article.objects.filter(questions__id=last_qid)
-        paginator = Paginator(article_list, 3)
+        paginator = Paginator(article_list, self.NumPerPage)
         try:
             articles = paginator.page(last_page + 1)
         except EmptyPage:
@@ -45,17 +46,32 @@ class TextHandler(HandlerBase):
         request.weixinsession['last_page'] = last_page + 1
         return articles
 
+    def _get(self, request, index):
+        '''获取指定序号的祝福语'''
+        last_qid = request.weixinsession.get('last_qid')
+        if not last_qid:
+            return self.DefaultReply
+        article_list = Article.objects.filter(questions__id=last_qid)
+        try:
+            article = article_list[index]
+        except IndexError:
+            return '没有该序号的祝福语'
+        return article.content.encode('utf8')
+
     def __call__(self, request):
         queryStr = self.msg.get('Content')
         if not queryStr:
             replyContent = self.DefaultReply
         else:
-            if queryStr.lower() != 'm':
-                questions = SEARCH.search_by_page(queryStr, 1, 1)
-                qids = [i['id'] for i in questions['object_list']]
-                request.weixinsession['last_qid'] = qids and qids[0] or None
-                request.weixinsession['last_page'] = 0
-            articles = self.more(request)    
+            if queryStr.isdigit():
+                articles = self._get(request, int(queryStr))
+            else:
+                if queryStr.lower() != 'm':
+                    questions = SEARCH.search_by_page(queryStr, 1, 1)
+                    qids = [i['id'] for i in questions['object_list']]
+                    request.weixinsession['last_qid'] = qids and qids[0] or None
+                    request.weixinsession['last_page'] = 0
+                articles = self.more(request)    
             if isinstance(articles, str):
                 return {'type':'text', 'info': articles}
             else:
@@ -65,10 +81,12 @@ class TextHandler(HandlerBase):
                 #        _type = 'news'
                 #        break
                 article_sep = '\n\n'
-                content = article_sep.join([a.content.encode('utf8') for a in articles])
+                startindex = (request.weixinsession['last_page'] - 1) * self.NumPerPage
+                content = article_sep.join(['%s:\n%s'%(startindex+i, articles[i].content.encode('utf8'))\
+                                                 for i in range(len(articles))])
                 while len(content) >= 2000 and article_sep in content:
                     content = content[:content.rfind(article_sep)]
-                content = '%s%s输入m可以查看更多'%(content, article_sep)
+                content = '%s%s输入m可以查看更多\n输入每条祝福语前面的序号，会单独发送该条祝福语'%(content, article_sep)
                 return {'type':'text', 'info':content}
                 
 
