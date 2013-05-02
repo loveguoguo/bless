@@ -1,1 +1,5 @@
 settings.py
+*.pyc
+indexdb
+upload_files
+
