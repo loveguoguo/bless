@@ -39,14 +39,14 @@ class Article(models.Model):
     def __unicode__(self):
         return self.content
 
-from indexes import Index
-index = Index(settings.INDEX_ROOT)
-
-def post_question_save(sender, instance, created, *args, **kwargs):
-    if not instance.content:
-        return
-    data = {'id': instance.id, 'content':instance.content.encode('utf8')}
-    index._update_index(data)
-
-signals.post_save.connect(post_question_save, sender=Question, 
-                                    dispatch_uid='apps.zhufu.models')
+#from indexes import Index
+#index = Index(settings.INDEX_ROOT)
+#
+#def post_question_save(sender, instance, created, *args, **kwargs):
+#    if not instance.content:
+#        return
+#    data = {'id': instance.id, 'content':instance.content.encode('utf8')}
+#    index._update_index(data)
+#
+#signals.post_save.connect(post_question_save, sender=Question, 
+#                                    dispatch_uid='apps.zhufu.models')
