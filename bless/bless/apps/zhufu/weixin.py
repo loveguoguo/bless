@@ -6,16 +6,11 @@ from django.core.urlresolvers import reverse
 from django.core.paginator import Paginator, EmptyPage
 from django.shortcuts import render_to_response, get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
-from django.utils.encoding import smart_str, smart_unicode
 from django.conf import settings
 from models import *
 from taggit.models import Tag, TaggedItem
 from djweixin.utils import checkSignature, HandlerBase, WeiXin
-import simplejson
 from indexes import Search
-import xml.etree.ElementTree as ET
-import hashlib
-import time
 
 SEARCH = Search(settings.INDEX_ROOT)
 
@@ -46,7 +41,8 @@ class TextHandler(HandlerBase):
             if last_page:
                 return '没有更多内容啦，欢迎查询其他祝福语'
             else:
-                return '不好意思，没有查到相关的祝福语，欢迎查询其他祝福语'
+                return '不好意思，没有查到相关的祝福语，请输入其他条件进行查询'
+        request.weixinsession['last_page'] = last_page + 1
         return articles
 
     def __call__(self, request):
@@ -68,10 +64,11 @@ class TextHandler(HandlerBase):
                 #    if article.imgurl:
                 #        _type = 'news'
                 #        break
-                content = '\n'.join([a['content'] for a in articles])
-                while len(content) >= 2000:
-                    content = content[:content.rfind('\n')]
-                content = '%s\n输入m可以查看更多'%content
+                article_sep = '\n\n'
+                content = article_sep.join([a.content.encode('utf8') for a in articles])
+                while len(content) >= 2000 and article_sep in content:
+                    content = content[:content.rfind(article_sep)]
+                content = '%s%s输入m可以查看更多'%(content, article_sep)
                 return {'type':'text', 'info':content}
                 
 
