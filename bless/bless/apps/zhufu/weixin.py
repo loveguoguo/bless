@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 #-*- coding:utf8 -*-
 
+from urlparse import urljoin
+import re
+
 from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.core.urlresolvers import reverse
 from django.core.paginator import Paginator, EmptyPage
@@ -13,6 +16,8 @@ from djweixin.utils import checkSignature, HandlerBase, WeiXin
 from indexes import Search
 
 SEARCH = Search(settings.INDEX_ROOT)
+
+IP_REGEX = re.compile(r'^(\d+[.]){3,3}\d+(:\d+)?$')
 
 @csrf_exempt
 def method_splitter(request, *args, **kwargs):
@@ -69,6 +74,7 @@ class TextHandler(HandlerBase):
                 if queryStr.lower() != 'm':
                     questions = SEARCH.search_by_page(queryStr, 1, 1)
                     qids = [i['id'] for i in questions['object_list']]
+                    request.weixinsession['last_querystr'] = queryStr
                     request.weixinsession['last_qid'] = qids and qids[0] or None
                     request.weixinsession['last_page'] = 0
                 articles = self.more(request)    
@@ -76,22 +82,38 @@ class TextHandler(HandlerBase):
                 return {'type':'text', 'info': articles}
             else:
                 _type = 'text'
-                #for article in articles:
-                #    if article.imgurl:
-                #        _type = 'news'
-                #        break
-                article_sep = '\n\n'
-                startindex = (request.weixinsession['last_page'] - 1) * self.NumPerPage
-                content = article_sep.join(['%s:\n%s'%(startindex+i, articles[i].content.encode('utf8'))\
-                                                 for i in range(len(articles))])
-                while len(content) >= 2000 and article_sep in content:
-                    content = content[:content.rfind(article_sep)]
-                content = '%s%s输入m可以查看更多\n输入每条祝福语前面的序号，会单独发送该条祝福语'%(content, article_sep)
-                return {'type':'text', 'info':content}
+                for article in articles:
+                    if article.imgurl:
+                        _type = 'news'
+                        break
+                if _type == 'text':
+                    article_sep = '\n\n'
+                    startindex = (request.weixinsession['last_page'] - 1) * self.NumPerPage
+                    content = article_sep.join(['%s:\n%s'%(startindex+i, articles[i].content.encode('utf8'))\
+                                                     for i in range(len(articles))])
+                    while len(content) >= 2000 and article_sep in content:
+                        content = content[:content.rfind(article_sep)]
+                    content = '%s%s输入m可以查看更多\n输入每条祝福语前面的序号，会单独发送该条祝福语'%(content, article_sep)
+                else:
+                    items = []
+                    host = request.get_host()
+                    if IP_REGEX.match(host):
+                        host = 'http://%s'%host 
+                    for article in articles:
+                        item = {
+                                'title': article.content[:10].encode('utf8'), 
+                                'description': article.content.encode('utf8'),
+                                'picurl': urljoin(host, article.imgurl.url),
+                                'url': urljoin(host, 
+                                            '%s?words=%s'%(reverse('search'), request.weixinsession['last_querystr'])),
+                            }
+                        items.append(item)
+                    content = items
+                return {'type':_type, 'info':content}
                 
 
 class EventHandler(HandlerBase):
-    welcome = '感谢关注节日生日祝福语,你可以输入想要条件查询祝福语'
+    welcome = '感谢关注节日生日祝福语,你可以输入条件查询祝福语'
     def __call__(self, request):
         event = request.weixindata.get('Event')
         if event.lower() == 'subscribe':

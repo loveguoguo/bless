@@ -107,8 +107,7 @@ class NewsReply(ReplyBase):
         for item in self.content:
             itemMsg = self.itemTpl%(item['title'], item['description'], item['picurl'], item['url'])
             itemMsg_list.append(itemMsg)
-        
-        reply = self.extTpl%(self.touser, self.fromuser, str(int(time.time())),
+        reply = self.extTpl%(self.touser, self.fromuser, str(int(time.time())), len(itemMsg_list),
                             ''.join(itemMsg_list))
         return reply
     
