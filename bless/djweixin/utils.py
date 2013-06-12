@@ -150,6 +150,7 @@ class WeiXin(object):
 
     def genReply(self, request=None):
         data = self.handler(request)
+        if not data:return ''
         replytype = data.get('type', 'text')
         reply_handler = self.replytype_dict.get(replytype)
         replyer = reply_handler(self.msg, data['info'])

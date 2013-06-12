@@ -2,6 +2,7 @@
 #-*- coding:utf8 -*-
 import time
 import xml.etree.ElementTree as ET
+from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.conf import settings
 from django.utils.cache import patch_vary_headers
 from django.utils.http import cookie_date
@@ -12,16 +13,18 @@ class WeixinSessionMiddleware(object):
     def process_request(self, request):
         if request.path != settings.WEIXIN_URL:
             return
-        rawStr = smart_str(request.raw_post_data)
-        rootElem = ET.fromstring(rawStr)
-        msg = {}
-        if rootElem.tag == 'xml':
-            for child in rootElem:
-                msg[child.tag] = smart_str(child.text)
-        request.weixindata = msg 
-        print 'weixindata', request.weixindata
-        engine = import_module(settings.WEIXIN_SESSION_ENGINE)
-        request.weixinsession = engine.WeixinSessionStore(msg['FromUserName']) 
+        try:
+            rawStr = smart_str(request.raw_post_data)
+            rootElem = ET.fromstring(rawStr)
+            msg = {}
+            if rootElem.tag == 'xml':
+                for child in rootElem:
+                    msg[child.tag] = smart_str(child.text)
+            request.weixindata = msg 
+            engine = import_module(settings.WEIXIN_SESSION_ENGINE)
+            request.weixinsession = engine.WeixinSessionStore(msg['FromUserName']) 
+        except:
+            raise Http404
 
     def process_response(self, request, response):
         if request.path != settings.WEIXIN_URL:
