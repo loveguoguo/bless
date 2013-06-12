@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+#coding=utf8
 from django.contrib.sessions.backends.base import SessionBase, CreateError
 from django.core.exceptions import SuspiciousOperation
 from django.db import IntegrityError, transaction, router
@@ -16,7 +18,7 @@ class WeixinSessionStore(SessionBase):
         try:
             s = Session.objects.get(
                 session_key = self.session_key,
-                expire_date__gt=timezone.now()
+                #expire_date__gt=timezone.now()
             )
             return self.decode(force_unicode(s.session_data))
         except (Session.DoesNotExist, SuspiciousOperation):
@@ -28,13 +30,15 @@ class WeixinSessionStore(SessionBase):
 
     def create(self):
         while True:
-            self._session_key = self._get_new_session_key()
+            #self._session_key = self._get_new_session_key()
             try:
                 # Save immediately to ensure we have a unique entry in the
                 # database.
                 self.save(must_create=True)
             except CreateError:
                 # Key wasn't unique. Try again.
+                #用的fromusername做的key，不能continue
+                self._session_key = self._get_new_session_key()
                 continue
             self.modified = True
             self._session_cache = {}
