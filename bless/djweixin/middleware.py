@@ -11,7 +11,7 @@ from django.utils.encoding import smart_str, smart_unicode
 
 class WeixinSessionMiddleware(object):
     def process_request(self, request):
-        if request.path != settings.WEIXIN_URL:
+        if request.path != settings.WEIXIN_URL or request.method != 'POST':
             return
         try:
             rawStr = smart_str(request.raw_post_data)
@@ -24,6 +24,8 @@ class WeixinSessionMiddleware(object):
             engine = import_module(settings.WEIXIN_SESSION_ENGINE)
             request.weixinsession = engine.WeixinSessionStore(msg['FromUserName']) 
         except:
+            import traceback
+            traceback.print_exc()
             raise Http404
 
     def process_response(self, request, response):
