@@ -1,4 +1,5 @@
 *.pyc
 bless/indexdb/
 bless/upload_files/
+bless/bless/test.html
 
