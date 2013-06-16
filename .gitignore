@@ -1,4 +1,6 @@
 *.pyc
+local_settings.py
+manage.py
 bless/indexdb/
 bless/upload_files/
 bless/bless/test.html
