@@ -68,7 +68,12 @@ class TextHandler(HandlerBase):
         if not queryStr:
             replyContent = self.DefaultReply
         else:
-            if queryStr.isdigit():
+            if queryStr == '游戏':
+                host = request.get_host()
+                if IP_REGEX.match(host):
+                    host = 'http://%s'%host 
+                articles = '微信小游戏：另类打飞机,请猛戳<a href="%s/static/fireplane/index.html">这里</a>' % host
+            elif queryStr.isdigit():
                 articles = self._get(request, int(queryStr))
             else:
                 if queryStr.lower() != 'm':
